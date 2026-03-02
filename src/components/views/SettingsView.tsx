@@ -22,9 +22,35 @@ import {
   DollarSign,
   Clock,
   Save,
-  AlertCircle
+  AlertCircle,
+  Users,
+  Plus,
+  Trash2,
+  Edit,
+  Key,
+  UserPlus,
+  Building2
 } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "../ui/dialog";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+
+interface TeamMember {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  role: "Business Owner" | "Team Member";
+  createdAt: string;
+}
 
 export function SettingsView() {
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -32,6 +58,27 @@ export function SettingsView() {
   const [lowStockAlerts, setLowStockAlerts] = useState(true);
   const [salesAlerts, setSalesAlerts] = useState(false);
   const [autoBackup, setAutoBackup] = useState(true);
+
+  // Team Management State
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
+    {
+      id: "1",
+      username: "owner",
+      email: "owner@autopartspro.com",
+      fullName: "John Doe",
+      role: "Business Owner",
+      createdAt: "2024-01-15"
+    }
+  ]);
+
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  
+  // New Member Form State
+  const [newMemberUsername, setNewMemberUsername] = useState("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [newMemberFullName, setNewMemberFullName] = useState("");
+  const [newMemberPassword, setNewMemberPassword] = useState("");
+  const [newMemberRole, setNewMemberRole] = useState<"Admin" | "Staff">("Admin");
 
   const handleSaveSettings = () => {
     toast.success("Settings saved successfully!");
@@ -45,6 +92,44 @@ export function SettingsView() {
     toast.info("Please select a file to import.");
   };
 
+  const handleAddTeamMember = () => {
+    if (!newMemberUsername || !newMemberEmail || !newMemberFullName || !newMemberPassword) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const newMember: TeamMember = {
+      id: Date.now().toString(),
+      username: newMemberUsername,
+      email: newMemberEmail,
+      fullName: newMemberFullName,
+      role: "Team Member",
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    setTeamMembers([...teamMembers, newMember]);
+    
+    // Reset form
+    setNewMemberUsername("");
+    setNewMemberEmail("");
+    setNewMemberFullName("");
+    setNewMemberPassword("");
+    setIsAddMemberOpen(false);
+    
+    toast.success("Team member account created successfully!");
+  };
+
+  const getRoleBadgeColor = (role: TeamMember["role"]) => {
+    switch (role) {
+      case "Business Owner":
+        return "bg-gradient-to-r from-purple-500 to-pink-500 text-white";
+      case "Team Member":
+        return "bg-gradient-to-r from-blue-500 to-indigo-500 text-white";
+      default:
+        return "bg-gray-500 text-white";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -55,10 +140,14 @@ export function SettingsView() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general">
             <User className="w-4 h-4 mr-2" />
             General
+          </TabsTrigger>
+          <TabsTrigger value="team">
+            <Users className="w-4 h-4 mr-2" />
+            Team
           </TabsTrigger>
           <TabsTrigger value="notifications">
             <Bell className="w-4 h-4 mr-2" />
@@ -567,7 +656,185 @@ export function SettingsView() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Team Management */}
+        <TabsContent value="team" className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 via-white to-purple-50">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF8A50] flex items-center justify-center flex-shrink-0">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-2">Team Account Management</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      As a Business Owner, you can create team member accounts to manage your automotive parts business collaboratively. 
+                      All team members share the same company data and have equal access to all system features.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="p-3 rounded-lg bg-white border border-purple-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">Business Owner</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Full system access and team management</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-white border border-blue-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">Team Member</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Full access to all features and shared data</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-[#FF6B00]" />
+                    Team Members
+                  </CardTitle>
+                  <CardDescription>
+                    View all team members who have access to your business data
+                  </CardDescription>
+                </div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button 
+                    onClick={() => setIsAddMemberOpen(true)} 
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8A50] hover:from-[#FF6B00]/90 hover:to-[#FF8A50]/90"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add Team Member
+                  </Button>
+                </motion.div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100">
+                      <TableHead className="font-semibold">Username</TableHead>
+                      <TableHead className="font-semibold">Email</TableHead>
+                      <TableHead className="font-semibold">Full Name</TableHead>
+                      <TableHead className="font-semibold">Role</TableHead>
+                      <TableHead className="font-semibold">Created Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <AnimatePresence mode="popLayout">
+                      {teamMembers.map((member, index) => (
+                        <motion.tr
+                          key={member.id}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -100 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="hover:bg-gray-50"
+                        >
+                          <TableCell className="font-medium">{member.username}</TableCell>
+                          <TableCell className="text-muted-foreground">{member.email}</TableCell>
+                          <TableCell>{member.fullName}</TableCell>
+                          <TableCell>
+                            <Badge className={getRoleBadgeColor(member.role)}>
+                              {member.role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{member.createdAt}</TableCell>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900 mb-1">Shared Access</h4>
+                    <p className="text-sm text-blue-700">
+                      All team members share the same company data and have equal access to features. 
+                      Each team member uses their own credentials to log in securely.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Add Member Dialog */}
+      <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>
+              Create a new team member account with full system access
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input 
+                id="username" 
+                placeholder="Enter username"
+                value={newMemberUsername} 
+                onChange={(e) => setNewMemberUsername(e.target.value)} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="member@company.com"
+                value={newMemberEmail} 
+                onChange={(e) => setNewMemberEmail(e.target.value)} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input 
+                id="fullName" 
+                placeholder="Enter full name"
+                value={newMemberFullName} 
+                onChange={(e) => setNewMemberFullName(e.target.value)} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="Create a secure password"
+                value={newMemberPassword} 
+                onChange={(e) => setNewMemberPassword(e.target.value)} 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAddTeamMember} className="bg-gradient-to-r from-[#FF6B00] to-[#FF8A50] hover:from-[#FF6B00]/90 hover:to-[#FF8A50]/90">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add Member
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

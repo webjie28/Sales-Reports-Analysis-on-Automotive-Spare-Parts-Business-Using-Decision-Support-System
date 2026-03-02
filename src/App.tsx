@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { LoginPage } from "./components/LoginPage";
 import { SalesHeader } from "./components/SalesHeader";
 import { AppSidebar } from "./components/AppSidebar";
@@ -20,6 +20,42 @@ import { SuppliersView } from "./components/views/SuppliersView";
 import { SettingsView } from "./components/views/SettingsView";
 import { NotificationsView } from "./components/views/NotificationsView";
 
+// 1. Define the "Shape" of your data for TypeScript [cite: 80, 196]
+interface SalesRecord {
+  report_id: number;
+  date: string;
+  order_number: string;
+  category: string;
+  total_amount: number;
+}
+
+const Dashboard: React.FC = () => {
+  // 2. Create a "State" to hold your database data [cite: 1510]
+  const [salesData, setSalesData] = useState<SalesRecord[]>([]);
+
+  // 3. The "useEffect" Hook (Put it here!) [cite: 1297]
+  useEffect(() => {
+    fetch('http://localhost:5000/api/sales') // Your Express Server URL
+      .then((response) => response.json())
+      .then((data) => {
+        setSalesData(data); // This updates your UI with real data [cite: 263-265]
+      })
+      .catch((error) => console.error('Error fetching sales:', error));
+  }, []);
+
+  return (
+    <div>
+      {/* 4. Map through your data to show it in your UI [cite: 1299] */}
+      {salesData.map((item) => (
+        <div key={item.report_id}>
+          {item.order_number} - {item.total_amount}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// export default app;
 export interface GlobalFilters {
   searchTerm: string;
   dateRange: string;
@@ -56,22 +92,19 @@ function AppContent() {
   };
 
   // Check for low stock items when user logs in
-  useEffect(() => {
-    if (isAuthenticated) {
-      const hasLowStockItems = inventory.some(item =>
-        item.status === "Low Stock" || item.status === "Critical"
-      );
+useEffect(() => {
+  if (isAuthenticated && inventory.length > 0) {
+    // Look for ANY item that is Critical or Low Stock
+    const lowStockItems = inventory.filter(item => 
+      item.status === "Critical" || item.status === "Low Stock"
+    );
 
-      if (hasLowStockItems) {
-        // Show modal after a brief delay to let the dashboard load
-        const timer = setTimeout(() => {
-          setShowLowStockModal(true);
-        }, 2000);
-
-        return () => clearTimeout(timer);
-      }
+    if (lowStockItems.length > 0) {
+      console.log("Low stock detected!", lowStockItems);
+      setShowLowStockModal(true);
     }
-  }, [isAuthenticated, inventory]);
+  }
+}, [isAuthenticated, inventory]); // This triggers every time inventory changes
 
   // Listen for filter updates from components
   useEffect(() => {

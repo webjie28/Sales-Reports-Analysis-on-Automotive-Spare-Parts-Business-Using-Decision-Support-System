@@ -60,6 +60,8 @@ export function SalesHeader({ onLogout, globalFilters, onUpdateFilters, onClearF
   const [localAnalyticsView, setLocalAnalyticsView] = useState(globalFilters.analyticsView);
   const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>(globalFilters.customDateRange?.from);
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>(globalFilters.customDateRange?.to);
+  const dateRangeIdMap = new Map(dateRanges.map(r => [r.value, `date-range-${r.value}`]));
+  const analyticsViewIdMap = new Map(analyticsViews.map(v => [v.value, `analytics-view-${v.value}`]));
 
   const handleCategoryToggle = (category: string) => {
     setLocalCategories(prev => 
@@ -164,14 +166,15 @@ export function SalesHeader({ onLogout, globalFilters, onUpdateFilters, onClearF
                     <div key={range.value} className="flex items-center space-x-2">
                       <input
                         type="radio"
-                        id={`date-${range.value}`}
+                        id={`date-range-${range.value}-${Math.random()}`}
                         name="dateRange"
                         checked={localDateRange === range.value}
                         onChange={() => setLocalDateRange(range.value)}
                         className="w-4 h-4 text-[#FF6B00]"
+                        aria-label={`Select ${range.label}`}
                       />
                       <Label
-                        htmlFor={`date-${range.value}`}
+                        htmlFor={`date-range-${range.value}-${Math.random()}`}
                         className="text-sm cursor-pointer"
                       >
                         {range.label}
@@ -246,14 +249,15 @@ export function SalesHeader({ onLogout, globalFilters, onUpdateFilters, onClearF
                     <div key={view.value} className="flex items-center space-x-2">
                       <input
                         type="radio"
-                        id={`analytics-${view.value}`}
+                        id={`analytics-view-${view.value}`}
                         name="analyticsView"
                         checked={localAnalyticsView === view.value}
                         onChange={() => setLocalAnalyticsView(view.value as any)}
                         className="w-4 h-4 text-[#FF6B00]"
+                        aria-label={`Select ${view.label}`}
                       />
                       <Label
-                        htmlFor={`analytics-${view.value}`}
+                        htmlFor={`analytics-view-${view.value}`}
                         className="text-sm cursor-pointer"
                       >
                         {view.label}
